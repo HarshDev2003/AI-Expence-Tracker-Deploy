@@ -2,18 +2,28 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, TrendingUp } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     const result = await login(email, password);
+    setSubmitting(false);
+    if (result.success) {
+      navigate('/dashboard');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setSubmitting(true);
+    const result = await googleLogin(credentialResponse.credential);
     setSubmitting(false);
     if (result.success) {
       navigate('/dashboard');
@@ -92,8 +102,18 @@ export default function Login() {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or</span>
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  console.log('Login Failed');
+                }}
+                useOneTap
+              />
             </div>
 
             <div className="mt-6 text-center">

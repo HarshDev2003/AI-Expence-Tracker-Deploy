@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { OAuth2Client } = require('google-auth-library');
 
 const router = express.Router();
 
@@ -135,6 +136,66 @@ router.get('/me', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+});
+
+// Google Login/Register
+router.post('/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Token is required' });
+    }
+
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    
+    // Verify token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+    
+    // Check if user exists
+    let user = await User.findOne({ email });
+    
+    if (user) {
+      // Link google ID if missing
+      if (!user.googleId) {
+        user.googleId = googleId;
+        // If they were originally local, we keep authProvider as local, but add googleId
+        await user.save();
+      }
+    } else {
+      // Create new user via Google
+      user = new User({
+        name,
+        email,
+        authProvider: 'google',
+        googleId,
+        role: 'user'
+      });
+      await user.save();
+    }
+    
+    const jwtToken = generateToken(user._id);
+    
+    res.json({
+      success: true,
+      data: {
+        token: jwtToken,
+        user
+      }
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to authenticate with Google'
     });
   }
 });

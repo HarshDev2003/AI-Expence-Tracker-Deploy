@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, User, TrendingUp } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
 
 export default function Register() {
@@ -12,7 +13,7 @@ export default function Register() {
     confirmPassword: ''
   });
   const [submitting, setSubmitting] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -34,6 +35,15 @@ export default function Register() {
 
     setSubmitting(true);
     const result = await register({ name: formData.name, email: formData.email, password: formData.password });
+    setSubmitting(false);
+    if (result.success) {
+      navigate('/dashboard');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setSubmitting(true);
+    const result = await googleLogin(credentialResponse.credential);
     setSubmitting(false);
     if (result.success) {
       navigate('/dashboard');
@@ -145,13 +155,34 @@ export default function Register() {
             </div>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-                Sign in
-              </Link>
-            </p>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  console.log('Login Failed');
+                }}
+                useOneTap
+              />
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

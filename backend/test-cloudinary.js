@@ -17,19 +17,19 @@ console.log('API Key:', api_key ? `${api_key.substring(0, 4)}... (Length: ${api_
 console.log('API Secret:', api_secret ? `${api_secret.substring(0, 4)}... (Length: ${api_secret.length})` : 'Missing');
 
 if (api_secret && api_secret.trim().length !== api_secret.length) {
-    console.warn('⚠️  WARNING: API Secret has leading or trailing spaces! This will cause authentication failure.');
+    console.warn(' WARNING: API Secret has leading or trailing spaces! This will cause authentication failure.');
 }
 
 if (cloud_name && cloud_name.trim().length !== cloud_name.length) {
-    console.warn('⚠️  WARNING: Cloud Name has leading or trailing spaces!');
+    console.warn('  WARNING: Cloud Name has leading or trailing spaces!');
 }
 
 cloudinary.api.ping()
     .then(res => {
-        console.log('✅ Connection Successful!');
+        console.log('Connection Successful!');
         console.log('Ping Result:', res);
     })
     .catch(err => {
-        console.error('❌ Connection Failed!');
+        console.error('Connection Failed!');
         console.dir(err, { depth: null });
     });

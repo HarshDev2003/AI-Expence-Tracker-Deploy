@@ -103,6 +103,20 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out successfully');
   }, [clearSession]);
 
+  const googleLogin = useCallback(async (token) => {
+    try {
+      const response = await apiClient.post('/auth/google', { token });
+      const { token: jwtToken, user: profile } = response.data.data;
+      persistSession(jwtToken, profile);
+      toast.success(`Welcome, ${profile.name}!`);
+      return { success: true, user: profile };
+    } catch (error) {
+      const message = error.message || 'Google Login failed. Please try again.';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  }, [persistSession]);
+
   const value = {
     user,
     loading,
@@ -110,6 +124,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    googleLogin,
     refreshProfile: fetchProfile
   };
 
